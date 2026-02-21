@@ -1,0 +1,11 @@
+niltonbasilio@192 python-app % kubectl get pods -n python
+NAME                          READY   STATUS    RESTARTS   AGE
+python-app-7d6df96d94-8dszd   1/1     Running   0          71s
+niltonbasilio@192 python-app % kubectl get ing -n python
+NAME         CLASS   HOSTS                 ADDRESS     PORTS   AGE
+python-app   nginx   python-app.test.com   localhost   80      4m11s
+niltonbasilio@192 python-app % kubectl get svc -n python
+NAME         TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)    AGE
+python-app   ClusterIP   10.96.98.27   <none>        5000/TCP   6m11s
+niltonbasilio@192 python-app % history
+

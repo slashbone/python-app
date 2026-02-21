@@ -1,0 +1,66 @@
+niltonbasilio@192 python-app % kind create cluster --name primeiro-python
+Creating cluster "primeiro-python" ...
+ ✓ Ensuring node image (kindest/node:v1.35.0) 🖼
+ ✓ Preparing nodes 📦  
+ ✓ Writing configuration 📜 
+ ✓ Starting control-plane 🕹️ 
+ ✓ Installing CNI 🔌 
+ ✓ Installing StorageClass 💾 
+Set kubectl context to "kind-primeiro-python"
+You can now use your cluster with:
+
+kubectl cluster-info --context kind-primeiro-python
+
+Have a nice day! 👋
+niltonbasilio@192 python-app % 
+niltonbasilio@192 python-app % kubectl cluster-info --context kind-primeiro-python  
+Kubernetes control plane is running at https://127.0.0.1:54057
+CoreDNS is running at https://127.0.0.1:54057/api/v1/namespaces/kube-system/services/kube-dns:dns/proxy
+
+To further debug and diagnose cluster problems, use 'kubectl cluster-info dump'.
+niltonbasilio@192 python-app % docker build -t python-app:v1 .
+[+] Building 1.8s (10/10) FINISHED                                                                                                                                 docker:desktop-linux
+ => [internal] load build definition from Dockerfile                                                                                                                               0.0s
+ => => transferring dockerfile: 185B                                                                                                                                               0.0s
+ => [internal] load metadata for docker.io/library/python:3.10-alpine                                                                                                              1.6s
+ => [auth] library/python:pull token for registry-1.docker.io                                                                                                                      0.0s
+ => [internal] load .dockerignore                                                                                                                                                  0.0s
+ => => transferring context: 2B                                                                                                                                                    0.0s
+ => [1/4] FROM docker.io/library/python:3.10-alpine@sha256:bd2fa681267f342f3b4200644810de5ee7832dda613a375fa9fcf42ac9387fbe                                                        0.0s
+ => => resolve docker.io/library/python:3.10-alpine@sha256:bd2fa681267f342f3b4200644810de5ee7832dda613a375fa9fcf42ac9387fbe                                                        0.0s
+ => [internal] load build context                                                                                                                                                  0.0s
+ => => transferring context: 90B                                                                                                                                                   0.0s
+ => CACHED [2/4] COPY requirements.txt /tmp                                                                                                                                        0.0s
+ => CACHED [3/4] RUN pip install -r /tmp/requirements.txt                                                                                                                          0.0s
+ => CACHED [4/4] COPY ./src /src                                                                                                                                                   0.0s
+ => exporting to image                                                                                                                                                             0.0s
+ => => exporting layers                                                                                                                                                            0.0s
+ => => exporting manifest sha256:3969423f73ab95d52a4b92ad0bef9d1d2634d680e2aa879ab69cbefed63ae40e                                                                                  0.0s
+ => => exporting config sha256:94f907f623465cd38273322402cda0531e077b950f26f070e31e0c7e7dcc9078                                                                                    0.0s
+ => => exporting attestation manifest sha256:f723175b329bef616a446186c10dcaf380c360b1686cce5ee233dde5b0ff5ca8                                                                      0.0s
+ => => exporting manifest list sha256:ae072e0965954170d93dcc37da6efec326ab64168ee11091a98fa1a6c07148f2                                                                             0.0s
+ => => naming to docker.io/library/python-app:v1                                                                                                                                   0.0s
+ => => unpacking to docker.io/library/python-app:v1                                                                                                                                0.0s
+
+ 1 warning found (use docker --debug to expand):
+ - JSONArgsRecommended: JSON arguments recommended for CMD to prevent unintended behavior related to OS signals (line 9)
+niltonbasilio@192 python-app %  
+niltonbasilio@192 python-app % 
+niltonbasilio@192 python-app % kind load docker-image python-app:latest --name primeiro-python
+ERROR: image: "python-app:latest" not present locally
+niltonbasilio@192 python-app % kind load docker-image python-app:v1 --name primeiro-python
+Image: "python-app:v1" with ID "sha256:ae072e0965954170d93dcc37da6efec326ab64168ee11091a98fa1a6c07148f2" not yet present on node "primeiro-python-control-plane", loading...
+niltonbasilio@192 python-app % 
+niltonbasilio@192 python-app % kubectl apply -f k8s/deploy.yaml
+deployment.apps/python-app created
+niltonbasilio@192 python-app % kubectl apply -f k8s/service.yaml
+service/python-app created
+niltonbasilio@192 python-app % kubectl get pods
+NAME                         READY   STATUS             RESTARTS   AGE
+python-app-5d6cb5956-s7949   0/1     ImagePullBackOff   0          18s
+niltonbasilio@192 python-app % kubectl get svc
+NAME         TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)    AGE
+kubernetes   ClusterIP   10.96.0.1      <none>        443/TCP    5m22s
+python-app   ClusterIP   10.96.64.136   <none>        8080/TCP   18s
+niltonbasilio@192 python-app % 
+niltonbasilio@192 python-app % 
