@@ -224,4 +224,132 @@ Se tudo estiver correto, você verá o JSON de resposta do seu app.
 
 ---
 
+
+---
+
+## [Avançado] Actions Runner Controller (ARC) e cert-manager
+
+### O que é o cert-manager?
+
+O **cert-manager** é um operador Kubernetes que automatiza a emissão e renovação de certificados TLS. Ele é fundamental para aplicações que precisam de HTTPS, autenticação mútua ou integração com ferramentas que dependem de certificados, como o Actions Runner Controller (ARC).
+
+### O que é o Actions Runner Controller (ARC)?
+
+O **Actions Runner Controller** permite que você execute runners auto-hospedados do GitHub Actions dentro do seu cluster Kubernetes. Isso é útil para CI/CD escalável, seguro e integrado ao seu ambiente.
+
+---
+
+### Passo a Passo Completo: Instalação do cert-manager e ARC
+
+#### 1. Instale o cert-manager no cluster
+
+O cert-manager é pré-requisito para o ARC. Instale com:
+
+```sh
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
+```
+
+Esse comando cria todos os recursos necessários (CRDs, Deployments, Services, Webhooks) no namespace `cert-manager`.
+
+**Exemplo de saída esperada:**
+```
+namespace/cert-manager created
+customresourcedefinition.apiextensions.k8s.io/challenges.acme.cert-manager.io created
+... (vários outros recursos criados)
+deployment.apps/cert-manager created
+deployment.apps/cert-manager-cainjector created
+deployment.apps/cert-manager-webhook created
+```
+
+#### 2. Verifique se o cert-manager está rodando
+
+```sh
+kubectl get pods -n cert-manager
+```
+Todos os pods devem estar em estado `Running`:
+```
+NAME                                       READY   STATUS    RESTARTS   AGE
+cert-manager-845844dd8-8fsbk               1/1     Running   0          8s
+cert-manager-cainjector-7b5d65fbcb-79l2v   1/1     Running   0          8s
+cert-manager-webhook-6fcf4cb6c-bsx76       1/1     Running   0          8s
+```
+
+#### 3. (Opcional) Instale a CLI do cert-manager
+
+Você pode instalar a CLI para facilitar operações avançadas, mas para a maioria dos fluxos, não é necessário.
+
+---
+
+#### 4. Instale o Actions Runner Controller (ARC)
+
+O ARC depende do cert-manager para gerenciar certificados internos. Instale o ARC usando Helm:
+
+```sh
+helm repo add actions-runner-controller https://actions-runner-controller.github.io/actions-runner-controller
+helm repo update
+helm install --namespace actions-runner-system --create-namespace actions-runner-controller actions-runner-controller/actions-runner-controller
+```
+
+Esses comandos adicionam o repositório Helm do ARC, atualizam a lista de charts e instalam o ARC no namespace `actions-runner-system`.
+
+#### 5. Verifique se o ARC está rodando
+
+```sh
+kubectl get pods -n actions-runner-system
+```
+Todos os pods devem estar em estado `Running`.
+
+---
+
+### Conceitos Importantes
+
+- **cert-manager:** Automatiza certificados TLS, essencial para segurança e integração de serviços no cluster.
+- **ARC:** Permite rodar runners do GitHub Actions dentro do Kubernetes, facilitando CI/CD nativo.
+- **Helm:** Gerenciador de pacotes para Kubernetes, usado para instalar o ARC de forma simples e padronizada.
+
+---
+
+### Resumo dos Comandos Utilizados
+
+1. Instalar cert-manager:
+  ```sh
+  kubectl apply -f https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.yaml
+  ```
+2. Verificar pods do cert-manager:
+  ```sh
+  kubectl get pods -n cert-manager
+  ```
+3. Adicionar repositório Helm do ARC:
+  ```sh
+  helm repo add actions-runner-controller https://actions-runner-controller.github.io/actions-runner-controller
+  helm repo update
+  ```
+4. Instalar ARC:
+  ```sh
+  helm install --namespace actions-runner-system --create-namespace actions-runner-controller actions-runner-controller/actions-runner-controller
+  ```
+5. Verificar pods do ARC:
+  ```sh
+  kubectl get pods -n actions-runner-system
+  ```
+
+---
+
+### Dicas e Soluções de Problemas
+
+- Se algum pod ficar em `Pending` ou `ImagePullBackOff`, use `kubectl describe pod <nome-do-pod>` para investigar.
+- Se o comando Helm falhar, verifique se o Helm está instalado (`helm version`).
+- O cert-manager precisa estar 100% funcional antes de instalar o ARC.
+- Para clusters Kind, lembre-se de mapear as portas corretamente no `kind-config.yaml`.
+
+---
+
+### Conclusão
+
+Com o cert-manager e o ARC instalados, seu cluster está pronto para executar runners do GitHub Actions de forma segura, escalável e integrada ao Kubernetes. Isso permite pipelines CI/CD modernos, automação e integração contínua diretamente no seu ambiente local ou cloud.
+
+Se precisar de exemplos de configuração de Runner, integração com repositórios GitHub ou troubleshooting, consulte a documentação oficial ou peça ajuda!
+
+---
+
 Se quiser, posso revisar ou editar os arquivos para você. Basta pedir!

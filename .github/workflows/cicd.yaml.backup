@@ -38,17 +38,11 @@ jobs:
 
       - uses: actions/checkout@v3
 
-      - name: Install Python and pip
-        shell: bash
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3 python3-pip
-
       - name: Modify values file
         shell: bash
         run: |
           echo ${{needs.ci.outputs.commit_id}}
-          pip3 install yq
+          pip install yq
           yq -Yi '.image.tag = "${{needs.ci.outputs.commit_id}}"' charts/python-app/values.yaml
 
       - name: Commit changes
