@@ -1,3 +1,29 @@
+---
+
+## [ArgoCD] Comandos úteis para instalação e acesso
+
+### Verificar namespaces disponíveis
+```sh
+kubectl get namespaces
+```
+
+### Instalar o ArgoCD (se o namespace não existir)
+```sh
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
+
+### Fazer port-forward para acessar a interface web
+```sh
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+```
+
+Depois, acesse http://localhost:8080 no navegador.
+
+Se o ArgoCD estiver em outro namespace, ajuste o comando:
+```sh
+kubectl port-forward svc/argocd-server -n <NOME_CORRETO_DO_NAMESPACE> 8080:443
+```
 
 # Guia Completo: Como rodar seu app Python no Kubernetes com Kind e Ingress
 
