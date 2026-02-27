@@ -2,73 +2,86 @@ name: cicd
 
 on:
   push:
+    branches: [ "main" ]
+    # Dispara somente quando muda código ou Dockerfile (evita loop quando só values.yaml muda)
     paths:
-      - src/**
-    branches:
-      - main
+      - "src/**"
+      - "Dockerfile"
+
+permissions:
+  contents: write   # necessário para commitar o values.yaml
+  packages: write   # ok manter para evoluções futuras (GHCR etc.)
+  id-token: write   # opcional; útil em extensões com OIDC
 
 jobs:
   ci:
     runs-on: ubuntu-latest
+    outputs:
+      short_sha: ${{ steps.vars.outputs.SHORT_SHA }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Shorten commit id
-        shell: bash
-        run: |
-          echo "COMMIT_ID=${GITHUB_SHA::6}" >> "$GITHUB_ENV"
-      -
-        name: Login to Docker Hub
+        id: vars
+        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_OUTPUT
+
+      - name: Set up QEMU (optional multi-arch)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push
+
+      - name: Build & Push (linux/amd64,arm64)
         uses: docker/build-push-action@v6
         with:
+          context: .
+          file: ./Dockerfile
           push: true
-          tags: slashbone/python-app:${{ env.COMMIT_ID }}
-    outputs:
-      commit_id: ${{ env.COMMIT_ID }}
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            slashbone/python-app:latest
+            slashbone/python-app:${{ steps.vars.outputs.SHORT_SHA }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
   cd:
     needs: ci
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
-
-      - uses: actions/checkout@v3
-
-      - name: Install Python and pip
-        shell: bash
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3 python3-pip
-
-      - name: Modify values file
-        shell: bash
-        run: |
-          echo ${{needs.ci.outputs.commit_id}}
-          pip3 install yq
-          yq -Yi '.image.tag = "${{needs.ci.outputs.commit_id}}"' charts/python-app/values.yaml
-
-      - name: Commit changes
-        uses: EndBug/add-and-commit@v9
+      - name: Checkout (full repo)
+        uses: actions/checkout@v4
         with:
-          message: 'Updates values.yaml with commit ${{needs.ci.outputs.commit_id}}'
+          ref: main
+          fetch-depth: 0
 
-      - name: Install argocd
-        shell: bash
+      - name: Install yq (v4)
         run: |
-          curl -ksSL -o argocd https://argocd-server.argocd/download/argocd-linux-amd64
-          chmod +x argocd
-          sudo mv ./argocd /usr/local/bin/argocd
+          sudo wget -qO /usr/local/bin/yq \
+            https://github.com/mikefarah/yq/releases/download/v4.44.1/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
 
-      - name: Argocd app sync
-        shell: bash
+      - name: Bump Helm values.yaml with new image tag
+        env:
+          SHORT_SHA: ${{ needs.ci.outputs.short_sha }}
         run: |
-          argocd login argocd-server.argocd \
-            --insecure  \
-            --grpc-web \
-            --username admin \
-            --password  ${{ secrets.ARGOCD_PASSWORD }}
-          argocd app sync python-app
+          FILE="charts/python-app/values.yaml"
+          # Mantém o repo em Docker Hub e troca somente a tag para o short SHA
+          yq -i ".image.repository = \"slashbone/python-app\"" "$FILE"
+          yq -i ".image.tag = strenv(SHORT_SHA)" "$FILE"
+
+      - name: Commit & push values.yaml (avoid CI loop)
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add charts/python-app/values.yaml
+          # [skip ci] evita re-disparar este workflow por este commit
+          git commit -m "[skip ci] chore(ci): bump image to slashbone/python-app:${{ needs.ci.outputs.short_sha }}"
+          git push
