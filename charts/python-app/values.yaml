@@ -1,35 +1,28 @@
 replicaCount: 1
-
 image:
   # O pipeline GitHub Actions atualizará a 'tag' aqui após cada build
   repository: slashbone/python-app
-  tag: latest
+  tag: "5565221"
   pullPolicy: IfNotPresent
-
-imagePullSecrets: []   # deixe vazio se o repositório do Docker Hub for público.
-                       # Se for privado, configuramos um Secret e referenciamos aqui.
+imagePullSecrets: [] # deixe vazio se o repositório do Docker Hub for público.
+# Se for privado, configuramos um Secret e referenciamos aqui.
 
 nameOverride: ""
 fullnameOverride: ""
-
 podAnnotations: {}
 podLabels: {}
-
 serviceAccount:
   create: false
   automount: true
   annotations: {}
   name: ""
-
 podSecurityContext: {}
 securityContext: {}
-
 service:
   type: ClusterIP
   port: 5000
-
 ingress:
-  enabled: false        # DESLIGADO para o lab mínimo sem ingress-nginx
+  enabled: false # DESLIGADO para o lab mínimo sem ingress-nginx
   className: "nginx"
   annotations: {}
   hosts:
@@ -38,12 +31,10 @@ ingress:
         - path: /
           pathType: Prefix
   tls: []
-
 resources:
   requests:
     cpu: 50m
-    memory: 50Mi        # padrão “Mi” preferido no ecossistema K8s
-
+    memory: 50Mi # padrão “Mi” preferido no ecossistema K8s
 # Probes apontando para a PORTA numérica (5000).
 # Se você já nomeia a porta do container como “http” no template, pode voltar a usar 'port: http'.
 livenessProbe:
@@ -54,19 +45,15 @@ readinessProbe:
   httpGet:
     path: /api/v1/healthz
     port: 5000
-
 autoscaling:
   enabled: false
   minReplicas: 1
   maxReplicas: 100
   targetCPUUtilizationPercentage: 80
-
 volumes: []
 volumeMounts: []
-
 nodeSelector: {}
 tolerations: []
 affinity: {}
-
 httpRoute:
   enabled: false
