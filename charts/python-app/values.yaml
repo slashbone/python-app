@@ -2,7 +2,7 @@ replicaCount: 1
 image:
   # O pipeline GitHub Actions atualizará a 'tag' aqui após cada build
   repository: slashbone/python-app
-  tag: "5565221"
+  tag: "19d0fdb"
   pullPolicy: IfNotPresent
 imagePullSecrets: [] # deixe vazio se o repositório do Docker Hub for público.
 # Se for privado, configuramos um Secret e referenciamos aqui.
