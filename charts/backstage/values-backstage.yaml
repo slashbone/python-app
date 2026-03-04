@@ -1,10 +1,9 @@
-
 image:
   repository: slashbone/backstage
   tag: "1.0"
   pullPolicy: Always
 
-# Pull Secret para a imagem do Backstage
+# Pull Secret só para a sua imagem do Backstage (se quiser, pode manter)
 imagePullSecrets:
   - name: dockerhub-cred
 
@@ -32,32 +31,24 @@ resources:
     memory: "1Gi"
 
 # ------------------------------
-# PostgreSQL (subchart Bitnami)
+# PostgreSQL (Bitnami) via ECR Public
 # ------------------------------
 postgresql:
   enabled: true
 
-  # Formato correto que o Bitnami espera
   image:
-    registry: docker.io
+    registry: public.ecr.aws
     repository: bitnami/postgresql
-    tag: "16"                  # evita sufixos que mudam (ex.: -debian-11-rX)
+    tag: "16"              # tag estável (evita sufixos) 
     pullPolicy: IfNotPresent
-    pullSecrets:               # Bitnami espera "pullSecrets" (lista de strings)
-      - dockerhub-cred
+    # Em ECR Public, normalmente NÃO precisa de pullSecrets
 
   primary:
     image:
-      registry: docker.io
+      registry: public.ecr.aws
       repository: bitnami/postgresql
       tag: "16"
       pullPolicy: IfNotPresent
-      pullSecrets:
-        - dockerhub-cred
-    # Alguns charts Bitnami também aceitam imagePullSecrets em paralelo; deixar não atrapalha.
-    imagePullSecrets:
-      - dockerhub-cred
-
     persistence:
       enabled: true
       size: 5Gi
