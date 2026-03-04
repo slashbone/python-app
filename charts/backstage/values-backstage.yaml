@@ -1,7 +1,7 @@
 image:
-  repository: backstage/backstage
-  tag: latest
-  pullPolicy: IfNotPresent
+  repository: slashbone/backstage
+  tag: "1.0"
+  pullPolicy: Always
 
 replicaCount: 1
 
