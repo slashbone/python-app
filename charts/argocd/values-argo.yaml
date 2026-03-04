@@ -11,13 +11,18 @@ controller:
 server:
   replicas: 1
   certificate:
-    enabled: false 
+    enabled: false   # SEM TLS
   ingress:
     enabled: true
     ingressClassName: nginx
-    tls: true
+    hosts:
+      - argocd.localtest.me
+    paths:
+      - /
+    pathType: Prefix
+    tls: false
     annotations:
-      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+      nginx.ingress.kubernetes.io/ssl-redirect: "false"
 
 repoServer:
   replicas: 1
@@ -25,5 +30,9 @@ repoServer:
 applicationSet:
   replicas: 1
 
+configs:
+  params:
+    server.insecure: "true"   # IMPORTANTE para evitar redirecionamentos HTTPS
+
 global:
-  domain: argocd.test.com
+  domain: argocd.localtest.me   # CORREÇÃO CRÍTICA
