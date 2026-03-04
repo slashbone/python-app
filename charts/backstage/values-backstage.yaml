@@ -31,27 +31,33 @@ resources:
 
 postgresql:
   enabled: true
+
   image:
     registry: docker.io
     repository: bitnami/postgresql
-    tag: "16.4.0"
+    tag: "16.4.0"                   # TAG CERTA
     pullPolicy: IfNotPresent
     pullSecrets:
       - dockerhub-cred
+
   primary:
     image:
       registry: docker.io
       repository: bitnami/postgresql
       tag: "16.4.0"
       pullPolicy: IfNotPresent
+
     imagePullSecrets:
-      - name: dockerhub-cred
+      - dockerhub-cred
+
     persistence:
       enabled: true
       size: 5Gi
+
   auth:
     username: backstage
     password: backstagepass
+    postgresPassword: "adminpass"
     database: catalog
 
 appConfig:
