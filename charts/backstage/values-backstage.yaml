@@ -3,6 +3,10 @@ image:
   tag: "1.0"
   pullPolicy: Always
 
+# Para permitir que o Kubernetes baixe imagens do Docker Hub autenticado
+imagePullSecrets:
+  - name: dockerhub-cred
+
 replicaCount: 1
 
 ingress:
@@ -28,14 +32,20 @@ resources:
 
 postgresql:
   enabled: true
-  auth:
-    username: backstage
-    password: backstagepass
-    database: catalog
+  image:
+    registry: docker.io
+    repository: bitnami/postgresql
+    tag: "16.4.0"     # TAG VÁLIDA (a sua 15.3.0-debian-11-r3 não existe mais)
   primary:
     persistence:
       enabled: true
       size: 5Gi
+    imagePullSecrets:
+      - name: dockerhub-cred
+  auth:
+    username: backstage
+    password: backstagepass
+    database: catalog
 
 appConfig:
   app:
