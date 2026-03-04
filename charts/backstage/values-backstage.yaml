@@ -1,8 +1,10 @@
+
 image:
   repository: slashbone/backstage
   tag: "1.0"
   pullPolicy: Always
 
+# Pull Secret para a imagem do Backstage
 imagePullSecrets:
   - name: dockerhub-cred
 
@@ -29,24 +31,30 @@ resources:
     cpu: "1000m"
     memory: "1Gi"
 
+# ------------------------------
+# PostgreSQL (subchart Bitnami)
+# ------------------------------
 postgresql:
   enabled: true
 
+  # Formato correto que o Bitnami espera
   image:
     registry: docker.io
     repository: bitnami/postgresql
-    tag: "16.4.0"                   # TAG CERTA
+    tag: "16"                  # evita sufixos que mudam (ex.: -debian-11-rX)
     pullPolicy: IfNotPresent
-    pullSecrets:
+    pullSecrets:               # Bitnami espera "pullSecrets" (lista de strings)
       - dockerhub-cred
 
   primary:
     image:
       registry: docker.io
       repository: bitnami/postgresql
-      tag: "16.4.0"
+      tag: "16"
       pullPolicy: IfNotPresent
-
+      pullSecrets:
+        - dockerhub-cred
+    # Alguns charts Bitnami também aceitam imagePullSecrets em paralelo; deixar não atrapalha.
     imagePullSecrets:
       - dockerhub-cred
 
@@ -60,6 +68,9 @@ postgresql:
     postgresPassword: "adminpass"
     database: catalog
 
+# ------------------------------
+# Backstage appConfig
+# ------------------------------
 appConfig:
   app:
     title: "Backstage - Lab do Nilton"
