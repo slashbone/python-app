@@ -1,0 +1,79 @@
+image:
+  repository: backstage/backstage
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount: 1
+
+ingress:
+  enabled: true
+  className: nginx
+  host: backstage.localtest.me
+  tls:
+    enabled: false
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+  requests:
+    cpu: "250m"
+    memory: "512Mi"
+  limits:
+    cpu: "1000m"
+    memory: "1Gi"
+
+postgresql:
+  enabled: true
+  auth:
+    username: backstage
+    password: backstagepass
+    database: catalog
+  primary:
+    persistence:
+      enabled: true
+      size: 5Gi
+
+appConfig:
+  app:
+    title: "Backstage - Lab do Nilton"
+    baseUrl: "http://backstage.localtest.me"
+
+  backend:
+    baseUrl: "http://backstage.localtest.me"
+    listen:
+      port: 7007
+    database:
+      client: pg
+      connection:
+        host: backstage-postgresql
+        port: 5432
+        user: backstage
+        password: backstagepass
+        database: catalog
+
+  techdocs:
+    builder: "local"
+    publisher:
+      type: "local"
+
+  kubernetes:
+    serviceLocatorMethod:
+      type: "multiTenant"
+    clusterLocatorMethods:
+      - type: "config"
+        clusters:
+          - url: "https://kubernetes.default.svc"
+            name: "kind-argocd-demo"
+            authProvider: "serviceAccount"
+            skipTLSVerify: true
+
+  argocd:
+    baseUrl: "http://argocd.localtest.me"
+
+envFrom:
+  - secretRef:
+      name: backstage-secrets
